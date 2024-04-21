@@ -4,7 +4,7 @@ import util
 import math 
 
 class NBLangIDModel:
-    def __init__(self, ngram_size: int = 2, extension: bool = False):
+    def __init__(self, extension: bool = False):
         """
         NBLangIDModel constructor
 
@@ -14,7 +14,6 @@ class NBLangIDModel:
         """
         self._priors = {}
         self._likelihoods = {}
-        self.ngram_size = ngram_size
         self.extension = extension
         #added in vocab for all possible char bigrams, no duplicates
         self.vocab = set()
@@ -31,44 +30,31 @@ class NBLangIDModel:
         """
         labelCounts = defaultdict(int)
         #lambda to ensure no typeError, no need to initialize new keys
-        bigramCounts = defaultdict(lambda : defaultdict(int))
+        wordCounts = defaultdict(lambda : defaultdict(int))
         self.labels = train_labels
 
-        for sentence, label in zip(train_sentences, train_labels):
-            bigrams = util.get_char_ngrams(sentence, self.ngram_size)
+        for summary, label in zip(train_sentences, train_labels):
+            wordList = summary.split()
             labelCounts[label] += 1
-            for bigram in bigrams:
-                bigramCounts[label][bigram] += 1
-                self.vocab.add(bigram)
+            for word in wordList:
+                wordCounts[label][word] += 1
+                self.vocab.add(word)
 
         #prior probs
         self._priors = util.normalize(labelCounts, log_prob = True)
 
-        #uniform prior
-        #for label in train_labels:
-            #self._priors[label] = math.log(1/8)
-
-        """
-        #prior likelihoods 
-        for label, bigrams in bigramCounts.items(): 
-            totalBigramNum = sum(bigrams.values())
-            likelihoods = {}
-            for bigram, count in bigrams.items():
-                likelihoods[bigram] = math.log((count + 1) / (totalBigramNum + len(bigrams)))
-                self._likelihoods[label] = likelihoods
-        """
         #add-one smoothing 
-        for label, bigrams in bigramCounts.items():
-            for bigram in self.vocab:
-                if bigram not in bigrams:
-                    bigramCounts[label][bigram] = 1
+        for label, wordList in wordCounts.items():
+            for word in self.vocab:
+                if word not in wordList:
+                    wordCounts[label][word] = 1
                 else: 
-                    bigramCounts[label][bigram] += 1
+                    wordCounts[label][word] += 1
         
         #normalize denominator and reassign likelihoods
-        for label, bigrams in bigramCounts.items():
-            totalBigramNum = sum(bigrams.values()) + len(self.vocab)
-            self._likelihoods[label] = util.normalize(bigrams, log_prob = True)
+        for label, wordList in wordCounts.items():
+            totalWordNum = sum(wordList.values()) + len(self.vocab)
+            self._likelihoods[label] = util.normalize(wordList, log_prob = True)
 
     def predict(self, test_sentences: List[str]) -> List[str]:
         """
@@ -112,12 +98,12 @@ class NBLangIDModel:
         for label in set(self.labels):
             returnDict[label] = self._priors[label]
 
-        sentenceBigrams = util.get_char_ngrams(test_sentence, self.ngram_size)
-        for bigram in sentenceBigrams:
+        summaryWords = test_sentence.split()
+        for word in summaryWords:
             #ignores unseen words
-            if bigram in self.vocab:
+            if word in self.vocab:
                 for label in set(self.labels):
-                #access prior and likelihood, then use to calculate probability of each bigram in that specific label 
-                    returnDict[label] += self._likelihoods[label][bigram]
+                #access prior and likelihood, then use to calculate probability of each word in that specific label 
+                    returnDict[label] += self._likelihoods[label][word]
                 
         return returnDict
