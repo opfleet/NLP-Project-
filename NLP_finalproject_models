@@ -1,0 +1,70 @@
+from typing import Dict, List
+from collections import defaultdict
+import util
+import math 
+# Naive bayes as well as BERT, compare and contrast 
+class NBmodel:
+        
+    def __init__(self, ngram_size: int = 2, extension: bool = False):
+        """
+        Naive Bayes Language Model Constructor
+        """
+        self._priors = None
+        self._likelihoods = {}
+        #added in vocab for all possible words, no duplicates
+        self.vocab = set()
+        #added in labels for all possible genre labels, no duplicates 
+        self.labels = set()
+
+
+    def fit (self, train_summaries: List[str], train_genres: List[str]):
+        """
+        Train the Naive Bayes model (by setting self._priors and self._likelihoods)
+
+        Args:
+            train_summaries (List[str]): book summaries from the training data
+            train_genres (List[str]): genre labels from the training data
+        """
+        
+        #set the book genre labels 
+        self.labels = train_genres
+        genreCounts = defaultdict(int)
+        termCounts = defaultdict(lambda : defaultdict(int))
+
+
+        for summary, label in zip(train_summaries, train_genres):
+            genreCounts[label] +=1
+            wordList = summary.split()
+            #get all individual word terms
+            for word in wordList:
+                    termCounts[label][word] += 1
+                    #add to comprehensive word vocab
+                    self.vocab.add(word)
+
+
+        #prior probs 
+        self._priors = util.normalize(genreCounts, log_prob = True)
+
+
+        #prior likelihoods 
+        for label, word in termCounts.items(): 
+            totalWordNum = sum(wordList.values())
+            likelihoods = {}
+            for word, count in termCounts.items():
+                likelihoods[word] = math.log((count + 1) / (totalWordNum + len(wordList)))
+                self._likelihoods[label] = likelihoods
+
+
+         #add-one smoothing 
+        for label, wordList in termCounts.items():
+            for word in self.vocab:
+                if word not in wordsList:
+                    termCounts[label][word] = 1
+                else: 
+                    termCounts[label][word] += 1
+
+        #normalize denominator and reassign likelihoods
+        for label, wordsList in termCounts.items():
+            totalWordNum = sum(wordsList.values()) + len(self.vocab)
+            for word in wordsList: 
+                self._likelihoods[label] = util.normalize(wordsList, log_prob = True)
