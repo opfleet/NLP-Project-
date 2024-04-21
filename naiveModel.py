@@ -4,7 +4,7 @@ import util
 import math 
 
 class NBLangIDModel:
-    def __init__(self, extension: bool = False):
+    def __init__(self):
         """
         NBLangIDModel constructor
 
@@ -14,7 +14,6 @@ class NBLangIDModel:
         """
         self._priors = {}
         self._likelihoods = {}
-        self.extension = extension
         #added in vocab for all possible char bigrams, no duplicates
         self.vocab = set()
         #added in labels for all possible language labels, no duplicates 
@@ -33,8 +32,12 @@ class NBLangIDModel:
         wordCounts = defaultdict(lambda : defaultdict(int))
         self.labels = train_labels
 
+    
+
         for summary, label in zip(train_sentences, train_labels):
+            print(type(summary))
             wordList = summary.split()
+            print(type(wordList))
             labelCounts[label] += 1
             for word in wordList:
                 wordCounts[label][word] += 1
