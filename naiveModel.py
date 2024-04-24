@@ -35,9 +35,9 @@ class NBLangIDModel:
     
 
         for summary, label in zip(train_sentences, train_labels):
-            print(type(summary))
+            #print(type(summary))
             wordList = summary.split()
-            print(type(wordList))
+            #print(type(wordList))
             labelCounts[label] += 1
             for word in wordList:
                 wordCounts[label][word] += 1
