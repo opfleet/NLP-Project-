@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import cuda, manual_seed
+
+# don't need until using virtual machine
+#from torch import cuda
 from torch.utils.data import DataLoader
 from transformers import AutoModel
 
@@ -12,6 +14,8 @@ class BERTGenreClassification(nn.Module):
         super().__init__()
 
         self.BERT = AutoModel.from_pretrained("distilbert-base-uncased")
+        
+        # specific for hw5, not yet implemented for project
         self.linear_layer = nn.Linear(768, 1)
 
         if (freeze_bert):
@@ -33,7 +37,7 @@ def train_model(model : BERTGenreClassification, train_dataloader: DataLoader,
     Trains model and prints accuracy on dev data after training
 
     Arguments:
-        model (HateSpeechClassificationModel): the model to train
+        model (BERTGenreClassification): the model to train
         train_dataloader (DataLoader): a pytorch dataloader containing the training data
         dev_dataloader (DataLoader): a pytorch dataloader containing the development data
         epochs (int): the number of epochs to train for (full iterations through the dataset)
