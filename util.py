@@ -3,7 +3,13 @@ import itertools
 import math
 import random
 from typing import Any, Dict, List, Optional, Tuple
+import pandas as pd
+import torch
+from datasets import Dataset
+from torch.utils.data import DataLoader
+from transformers import AutoTokenizer
 
+from BERTModel import BERTGenreClassification
 
 LANGUAGES = ["eng", "rus", "ita", "spa", "fra", "tur", "deu", "cmn"]
 
@@ -170,3 +176,51 @@ def print_confusion_matrix(matrix: List[List[int]], labels: List[str],
 
     # print the final table
     print("\n".join(labeled_matrix_strings))
+
+def model_accuracy(model: BERTGenreClassification, dataloader: DataLoader, device):
+    """Compute the accuracy of a binary classification model
+
+    Args:
+        model (HateSpeechClassificationModel): a hate speech classification model
+        dataloader (DataLoader): a pytorch data loader to test the model with
+        device (string): cpu or cuda, the device that the model is on
+
+    Returns:
+        float: the accuracy of the model
+    """
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        for batch in dataloader:
+            pred = model(batch["input_ids"].to(device), batch["attention_mask"].to(device))
+            correct += (batch["label_int"] == (pred.to("cpu").squeeze() > 0.5).to(int)).sum().item()
+            total += batch["label_int"].shape[0]
+        acc = correct / total
+        return acc
+
+
+def get_dataloader(data_split: str, data_path: str = None, batch_size: int = 4):
+    """
+    Get a pytorch dataloader for a specific data split
+
+    Args:
+        data_split (str): the data split
+        data_path (str, optional): a data path if the data is not stored at the default path.
+            For students using ada, this should always be None. Defaults to None.
+        batch_size (int, optional): the desired batch size. Defaults to 4.
+
+    Returns:
+        DataLoader: the pytorch dataloader object
+    """
+    assert data_split in ["train", "dev", "test"]
+    if data_path is None:
+        data = pd.read_csv(f"/home/lbiester/CS457HW/HW5/data/{data_split}.tsv", sep="\t")
+    else:
+        data = pd.read_csv(data_path, sep="\t")
+    data["label_int"] = data["label"].apply(lambda x: 1 if x == "hate" else 0)
+    dataset = Dataset.from_pandas(data)
+    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+    dataset = dataset.map(lambda ex: tokenizer(ex["text"], truncation=True, padding="max_length"), batched=True)
+    dataset = dataset.with_format("torch")
+    dataloader = DataLoader(dataset, batch_size=batch_size)
+    return dataloader
