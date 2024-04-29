@@ -30,7 +30,7 @@ class NBLangIDModel:
         labelCounts = defaultdict(int)
         #lambda to ensure no typeError, no need to initialize new keys
         wordCounts = defaultdict(lambda : defaultdict(int))
-        self.labels = train_labels
+        self.labels = set(train_labels)
 
     
 

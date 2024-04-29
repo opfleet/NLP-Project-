@@ -199,7 +199,7 @@ def model_accuracy(model: BERTGenreClassification, dataloader: DataLoader, devic
         return acc
 
 
-def get_dataloader(data_split: str, data_path: str = None, batch_size: int = 4):
+def get_dataloader(data, batch_size: int = 4):
     """
     Get a pytorch dataloader for a specific data split
 
@@ -212,15 +212,11 @@ def get_dataloader(data_split: str, data_path: str = None, batch_size: int = 4):
     Returns:
         DataLoader: the pytorch dataloader object
     """
-    assert data_split in ["train", "dev", "test"]
-    if data_path is None:
-        data = pd.read_csv(f"/home/lbiester/CS457HW/HW5/data/{data_split}.tsv", sep="\t")
-    else:
-        data = pd.read_csv(data_path, sep="\t")
-    data["label_int"] = data["label"].apply(lambda x: 1 if x == "hate" else 0)
     dataset = Dataset.from_pandas(data)
     tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+
     dataset = dataset.map(lambda ex: tokenizer(ex["text"], truncation=True, padding="max_length"), batched=True)
+    
     dataset = dataset.with_format("torch")
     dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
