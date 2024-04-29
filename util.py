@@ -220,3 +220,17 @@ def get_dataloader(data, batch_size: int = 4):
     dataset = dataset.with_format("torch")
     dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
+
+def BERT_preprocess(data, labels_as_id):
+    labels = [0] * len(labels_as_id)
+    for i, l in labels_as_id.items():
+        
+        if l == data["genre1"] or l == data["genre2"] or l == data["genre3"]:
+            labels[i] = 1
+        else:
+            labels[i] = 0
+        
+    tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
+    data = tokenizer(data["description"], truncation = True, padding = 'max_length', max_length=256)
+    data['data'] = labels
+    return data
