@@ -212,15 +212,18 @@ def get_dataloader(data, batch_size: int = 4):
     Returns:
         DataLoader: the pytorch dataloader object
     """
-    dataset = Dataset.from_pandas(data)
+    #dataset = Dataset.from_pandas(data)
+    dataset = data
     tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-
     dataset = dataset.map(lambda ex: tokenizer(ex["description"], truncation=True, padding="max_length"), batched=True)
     
-    dataset = dataset.with_format("torch")
+
+    #dataset = data.map(lambda x: toke, batched = True)
+    #dataset = dataset.with_format("torch")
     dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
 
+'''
 def BERT_preprocess(data, labels_as_id):
     tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
 
@@ -237,3 +240,16 @@ def BERT_preprocess(data, labels_as_id):
 
         data.iat[entry, 6] = labels
     return data
+'''
+
+def BERT_preprocess(dataset: dict, id2label, tokenizer):
+    labels = [0] * len(id2label)
+    for k, l in id2label.items():
+        if l in [dataset['genre1'], dataset['genre2'], dataset['genre3']]:
+            labels[k] = 1
+        else:
+            labels[k] = 0
+    dataset = tokenizer(dataset['description'], truncation= True, padding= 'max_length', max_length = 256)
+    dataset['label'] = labels
+    return dataset
+    

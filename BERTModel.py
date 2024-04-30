@@ -16,7 +16,7 @@ class BERTGenreClassification(nn.Module):
         self.BERT = AutoModel.from_pretrained("distilbert-base-uncased")
         
         # specific for hw5, not yet implemented for project
-        self.linear_layer = nn.Linear(768, 1)
+        self.linear_layer = nn.Linear(256, 312)
 
         if (freeze_bert):
             for parameter in self.BERT.parameters():
@@ -27,7 +27,7 @@ class BERTGenreClassification(nn.Module):
         output = self.BERT(input_ids= input_ids, attention_mask= attention_mask)
         CLS_tokens = output.last_hidden_state[:, 0, :]
         z = self.linear_layer(CLS_tokens)
-        return F.sigmoid(z).squeeze(-1)
+        return F.softmax(z).squeeze(-1)
     
 
     
@@ -51,7 +51,7 @@ def train_model(model : BERTGenreClassification, train_dataloader: DataLoader,
 
     # Edit device if need to use virtual machine/ada cluster
     device = 'cpu' #"cuda" if cuda.is_available() else "cpu"
-    loss_func = nn.BCELoss()
+    loss_func = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr= learning_rate)
 
     for e in range(epochs):
@@ -59,9 +59,9 @@ def train_model(model : BERTGenreClassification, train_dataloader: DataLoader,
         b_num = 0
 
         for batch in train_dataloader:
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
-            labels = batch['label_int'].to(device)
+            input_ids = batch['input_ids']          #.to(device)
+            attention_mask = batch['attention_mask']#.to(device)
+            labels = batch['label']                 #.to(device)
 
             model.zero_grad()
             preds = model(input_ids, attention_mask)
