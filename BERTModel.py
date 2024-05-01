@@ -15,8 +15,7 @@ class BERTGenreClassification(nn.Module):
 
         self.BERT = AutoModel.from_pretrained("distilbert-base-uncased")
         
-        # specific for hw5, not yet implemented for project
-        self.linear_layer = nn.Linear(256, 312)
+        self.linear_layer = nn.Linear(768, 303)
 
         if (freeze_bert):
             for parameter in self.BERT.parameters():
@@ -27,7 +26,12 @@ class BERTGenreClassification(nn.Module):
         output = self.BERT(input_ids= input_ids, attention_mask= attention_mask)
         CLS_tokens = output.last_hidden_state[:, 0, :]
         z = self.linear_layer(CLS_tokens)
-        return F.softmax(z).squeeze(-1)
+        z = F.sigmoid(z).squeeze(-1)
+        print(z.shape)
+        _, idx = z.topk(3, dim=0)
+        z = z.fill_(0.0)
+        z[idx] = 1.0
+        return z
     
 
     
@@ -59,16 +63,19 @@ def train_model(model : BERTGenreClassification, train_dataloader: DataLoader,
         b_num = 0
 
         for batch in train_dataloader:
-            input_ids = batch['input_ids']          #.to(device)
-            attention_mask = batch['attention_mask']#.to(device)
-            labels = batch['label']                 #.to(device)
+            input_ids = torch.stack(batch['input_ids'], dim=0).to(device)
+            attention_mask = torch.stack(batch['attention_mask'], dim = 0).to(device)
+            labels = torch.stack(batch['label'], dim=0).to(device)
 
             model.zero_grad()
-            preds = model(input_ids, attention_mask)
-            b_loss = loss_func(preds.float(), labels.float())
+            preds = model(input_ids.T, attention_mask)
+
+            b_loss = loss_func(preds.float(), labels.T.float())
             e_loss = e_loss + b_loss
+
             b_loss.backward()
             optimizer.step()
+
             b_num = b_num + 1
 
         train_accuracy = model_accuracy(model, train_dataloader, device)
