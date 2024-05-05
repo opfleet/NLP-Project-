@@ -1,6 +1,6 @@
 from typing import Dict, List
 from collections import defaultdict
-import util
+import NaiveBayesUtil as util
 import math 
 
 class NBLangIDModel:
