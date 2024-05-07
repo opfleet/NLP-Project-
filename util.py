@@ -7,9 +7,9 @@ import pandas as pd
 import torch
 from datasets import Dataset
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer
+#from transformers import AutoTokenizer
 
-from BERTModel import BERTGenreClassification
+#from BERTModel import BERTGenreClassification
 
 LANGUAGES = ["eng", "rus", "ita", "spa", "fra", "tur", "deu", "cmn"]
 
