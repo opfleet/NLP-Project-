@@ -44,11 +44,4 @@ Exploring different measures of accuracy, including genre position-dependent and
 
 
 BERT MODEL: 
-
-
-
-
-
-
-GRADESCOPE COMMENT... oscar u can delete this after your bert part is done. 
-In your code, you should include thorough documentation. This includes at a bare minimum a README.md file that describes how to run your code to reproduce the main results in your paper. For instance, if you report 56% accuracy from your baseline model and 80% accuracy from your new and improved model, you should describe the series of scripts or commands that you would run to land at both of those results.
+To reproduce our BERT model's results, the user will have to use a HPC cluster, such as the Middlebury Ada cluster. Since the user will have to run a Python file using an sbatch command, they will have to utilize a remote connection in VSCode, and utilize the `nlp-project.py`, which is the Python file equivalent to our Jupyter Notebook. Within this file, there are three areas of our code that have the labels **for top 3** and **for top 1**. For our 3-label classification that returned a 34% accuracy rate, make sure that the **for top 3** sections are uncommented, and that the **for top 1** sections are commented out. For our 1-label classification that returned a 15% accuracy rate, make sure that the opposite is true: that the **for top 1** sections are uncommented, and that the **for top 3** sections are commented out. After ensuring these conditions dependent on which performance the user is trying to emulate, open the remote connection terminal and run `sbatch nlp-project.sbatch` (all of the BERT training parameters are consistent between the two run conditions). Included in the `nlp-project.py` file are classification reports that will allow the user to see the accuracy rates of the BERT classification model.
